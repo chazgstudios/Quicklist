@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<title>QuickList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0ede8;
+    --surface: #ffffff;
+    --surface2: #f7f5f2;
+    --border: #e3dfd8;
+    --text: #1c1a17;
+    --muted: #9b9690;
+    --accent: #d4622a;
+    --accent-dim: rgba(212,98,42,0.09);
+    --flag: #e8a020;
+    --flag-dim: rgba(232,160,32,0.1);
+    --danger: #c93535;
+    --danger-dim: rgba(201,53,53,0.08);
+    --green: #27a85f;
+    --radius: 13px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 100px;
+  }
+
+  /* ── HERO ─────────────────────────────────────── */
+  #hero {
+    background: linear-gradient(145deg,
+      #d4e8f5 0%, #c8dff0 15%, #b8d4e8 30%,
+      #a8ccdf 45%, #9fc8d8 55%, #a8d4c4 68%,
+      #b0dab8 80%, #c2e0b8 90%, #d4e8c4 100%
+    );
+    padding: 28px 40px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: box-shadow 0.4s;
+  }
+
+  #hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 120% at 25% 50%, rgba(255,255,255,0.3) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  #hero { position: sticky; }
+
+  #hero.complete {
+    box-shadow: 0 0 40px rgba(39,168,95,0.4), 0 0 80px rgba(39,168,95,0.18);
+  }
+
+  #hero-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(25,50,42,0.5);
+    margin-bottom: 7px;
+  }
+
+  #hero-label {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a3028;
+    line-height: 1;
+    margin-bottom: 15px;
+    position: relative;
+    height: 29px;
+  }
+
+  #hero-counter {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    opacity: 1;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  #hero-celebration {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    transform: translateY(6px);
+  }
+
+  #hero.complete #hero-counter {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+  }
+
+  #hero.complete #hero-celebration {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+  }
+
+  #hero-cel-icon { font-size: 20px; line-height: 1; }
+
+  #hero-cel-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a3028;
+    flex: 1;
+  }
+
+  #hero-cel-dismiss {
+    font-size: 11px;
+    color: rgba(25,50,42,0.4);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+  #hero-cel-dismiss:hover { color: rgba(25,50,42,0.8); }
+
+  #hero-pct {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2a6e7a;
+  }
+
+  #hero-bar-track {
+    height: 5px;
+    background: rgba(30,60,50,0.12);
+    border-radius: 99px;
+    overflow: visible;
+    position: relative;
+  }
+
+  #hero-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4a9aba 0%, #3aac8a 100%);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.45s cubic-bezier(0.34,1.56,0.64,1), background 0.4s, box-shadow 0.4s;
+    position: relative;
+  }
+
+  #hero.complete #hero-bar-fill {
+    background: linear-gradient(90deg, #27a85f 0%, #6ee8a2 100%);
+    box-shadow: 0 0 12px rgba(110,232,162,0.85), 0 0 28px rgba(39,168,95,0.5);
+  }
+
+  /* ── SPLASH / INBOX ZERO ──────────────────────── */
+  #splash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+    text-align: center;
+    background: linear-gradient(145deg,
+      #d4e8f5 0%,
+      #c8dff0 15%,
+      #b8d4e8 30%,
+      #a8ccdf 45%,
+      #9fc8d8 55%,
+      #a8d4c4 68%,
+      #b0dab8 80%,
+      #c2e0b8 90%,
+      #d4e8c4 100%
+    );
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    overflow: hidden;
+  }
+
+  #splash::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 30% 40%, rgba(255,255,255,0.35) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 75% 70%, rgba(160,210,190,0.3) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  #splash.visible { display: flex; }
+
+  .splash-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .splash-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+  }
+
+  .splash-headline {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a2e28;
+    margin-bottom: 10px;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.4);
+  }
+
+  .splash-sub {
+    font-size: 13px;
+    color: rgba(30,50,44,0.65);
+    margin-bottom: 32px;
+    font-weight: 400;
+    max-width: 280px;
+    line-height: 1.6;
+  }
+
+  .splash-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .splash-btn {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+  }
+
+  .splash-btn-primary {
+    background: rgba(25,55,45,0.82);
+    color: #fff;
+    backdrop-filter: blur(6px);
+  }
+  .splash-btn-primary:hover { background: rgba(25,55,45,1); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+
+  .splash-btn-secondary {
+    background: rgba(255,255,255,0.55);
+    color: #1a2e28;
+    border: 1px solid rgba(255,255,255,0.7);
+    backdrop-filter: blur(6px);
+  }
+  .splash-btn-secondary:hover { background: rgba(255,255,255,0.75); transform: translateY(-2px); }
+
+  /* ── MAIN ─────────────────────────────────────── */
+  #main {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 34px 22px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── SPLASH FADE ─────────────────────────────── */
+  #splash {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  #splash.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── SECTION CARD ─────────────────────────────── */
+  .section-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+    animation: fadeUp 0.22s ease both;
+    transition: box-shadow 0.2s, opacity 0.2s, transform 0.18s;
+    cursor: default;
+  }
+
+  .section-card.dragging {
+    opacity: 0.45;
+    transform: scale(0.98);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.14);
+  }
+
+  .section-card.drag-over {
+    box-shadow: 0 0 0 2px #4a9aba, 0 4px 20px rgba(74,154,186,0.25);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* collapse chevron */
+  .collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+    color: rgba(0,0,0,0.3);
+    font-size: 11px;
+    flex-shrink: 0;
+    transition: color 0.14s, transform 0.22s ease;
+    transform-origin: center;
+  }
+  .collapse-btn:hover { color: rgba(0,0,0,0.6); }
+  .section-card.collapsed .collapse-btn { transform: rotate(-90deg); }
+
+  /* collapsed body */
+  .section-body {
+    overflow: hidden;
+    transition: max-height 0.28s ease, opacity 0.2s ease;
+    max-height: 2000px;
+    opacity: 1;
+  }
+  .section-card.collapsed .section-body {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  /* keyboard focus ring on tasks */
+  .task-item.kb-focus {
+    outline: 2px solid var(--sec-color, #4a9aba);
+    outline-offset: -2px;
+    background: rgba(255,255,255,0.85) !important;
+  }
+
+  .drag-handle {
+    cursor: grab;
+    color: rgba(0,0,0,0.2);
+    font-size: 14px;
+    padding: 2px 4px 2px 0;
+    flex-shrink: 0;
+    user-select: none;
+    line-height: 1;
+    transition: color 0.14s;
+  }
+  .drag-handle:hover { color: rgba(0,0,0,0.45); }
+  .drag-handle:active { cursor: grabbing; }
+
+  .section-header {
+    padding: 15px 17px 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+
+  .section-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .section-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    background: none;
+    border: none;
+    outline: none;
+    cursor: text;
+    padding: 3px 6px;
+    border-radius: 5px;
+    transition: background 0.15s, box-shadow 0.15s;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .section-name:hover { background: rgba(0,0,0,0.05); }
+  .section-name:focus { background: rgba(255,255,255,0.7); box-shadow: 0 0 0 2px rgba(0,0,0,0.2); }
+
+  .section-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'Poppins', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    padding: 4px 9px;
+    border-radius: 5px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: rgba(255,255,255,0.5);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.14s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: rgba(255,255,255,0.9); color: var(--text); }
+  .btn-danger:hover { background: var(--danger-dim); color: var(--danger); border-color: var(--danger); }
+  .btn-reset:hover  { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+  /* filter toggle */
+  .filter-btn {
+    font-family: 'Poppins', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 4px 9px;
+    border-radius: 5px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: rgba(255,255,255,0.5);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.14s;
+    white-space: nowrap;
+  }
+
+  .filter-btn:hover { background: rgba(255,255,255,0.9); color: var(--text); }
+  .filter-btn.active-all    { background: rgba(255,255,255,0.85); color: var(--text); font-weight: 600; }
+  .filter-btn.active-open   { background: rgba(255,255,255,0.85); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .filter-btn.active-done   { background: rgba(255,255,255,0.85); color: var(--green); border-color: var(--green); font-weight: 600; }
+
+  /* section progress bar */
+  .section-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-bar-track {
+    flex: 1;
+    height: 3px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .section-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.35s cubic-bezier(0.34,1.56,0.64,1), background 0.3s;
+  }
+
+  .section-pct {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.35);
+    min-width: 30px;
+    text-align: right;
+  }
+
+  /* ── TASKS ────────────────────────────────────── */
+  .task-list { padding: 3px 0; background: rgba(255,255,255,0.55); }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 17px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    transition: background 0.1s, opacity 0.2s, max-height 0.2s;
+    animation: fadeUp 0.18s ease both;
+    border-left: 3px solid transparent;
+  }
+
+  .task-item:last-child { border-bottom: none; }
+  .task-item:hover { background: rgba(255,255,255,0.8); }
+  .task-item.hidden { display: none; }
+
+  .task-item.priority {
+    background: color-mix(in srgb, var(--sec-color, var(--flag)) 10%, transparent);
+    border-left-color: var(--sec-color, var(--flag));
+  }
+  .task-item.priority:hover { background: color-mix(in srgb, var(--sec-color, var(--flag)) 16%, transparent); }
+
+  /* custom checkbox */
+  .cb-wrap {
+    position: relative;
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+  }
+
+  .cb-wrap input[type="checkbox"] {
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 1;
+    margin: 0;
+  }
+
+  .cb-box {
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid rgba(0,0,0,0.2);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.8);
+    pointer-events: none;
+    transition: all 0.14s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cb-wrap input:checked ~ .cb-box {
+    background: var(--sec-color, var(--green));
+    border-color: var(--sec-color, var(--green));
+  }
+
+  .cb-check {
+    width: 9px;
+    height: 9px;
+    opacity: 0;
+    transition: opacity 0.14s;
+  }
+
+  .cb-wrap input:checked ~ .cb-box .cb-check { opacity: 1; }
+
+  .task-label {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.4;
+    transition: all 0.2s;
+  }
+
+  .task-item.done .task-label {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: #c0bdb8;
+  }
+
+  .flag-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 3px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.14s, transform 0.14s;
+    flex-shrink: 0;
+    font-size: 13px;
+    filter: grayscale(1) opacity(0.4);
+  }
+
+  .task-item:hover .flag-btn { opacity: 1; }
+  .task-item.priority .flag-btn { opacity: 1; filter: none; }
+  .flag-btn:hover { transform: scale(1.2); filter: none !important; opacity: 1 !important; }
+
+  .task-delete {
+    opacity: 0;
+    font-size: 15px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    transition: all 0.14s;
+    flex-shrink: 0;
+  }
+
+  .task-item:hover .task-delete { opacity: 1; }
+  .task-delete:hover { color: var(--danger); }
+
+  /* ── ADD TASK ROW ─────────────────────────────── */
+  .add-task-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 17px;
+    background: rgba(255,255,255,0.4);
+    border-top: 1px solid rgba(0,0,0,0.07);
+  }
+
+  .add-task-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    padding: 3px 0;
+  }
+
+  .add-task-input::placeholder { color: rgba(0,0,0,0.28); }
+
+  .add-task-btn {
+    font-size: 16px;
+    color: rgba(0,0,0,0.3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.14s;
+    line-height: 1;
+    padding: 0 2px;
+  }
+
+  .add-task-btn:hover { color: var(--accent); transform: scale(1.2); }
+
+  /* ── ADD SECTION BUTTON ───────────────────────── */
+  #add-section-wrap { display: flex; justify-content: center; }
+
+  #add-section-btn {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+  }
+
+  #add-section-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* ── EMPTY STATE ──────────────────────────────── */
+  .empty-hint {
+    font-size: 11px;
+    color: rgba(0,0,0,0.3);
+    font-style: italic;
+    padding: 14px 18px;
+    text-align: center;
+    background: rgba(255,255,255,0.55);
+  }
+
+  .delete-section-btn {
+    font-size: 15px;
+    color: rgba(0,0,0,0.25);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.14s;
+    flex-shrink: 0;
+  }
+  .delete-section-btn:hover { color: var(--danger); }
+
+  .task-label { cursor: default; }
+  .task-label.editing {
+    outline: none;
+    background: rgba(255,255,255,0.85);
+    border-radius: 4px;
+    box-shadow: 0 0 0 2px var(--sec-color, #4a9aba);
+    padding: 1px 5px;
+    cursor: text;
+  }
+  .task-drag-handle {
+    cursor: grab;
+    color: rgba(0,0,0,0.18);
+    font-size: 12px;
+    padding: 0 4px 0 0;
+    flex-shrink: 0;
+    user-select: none;
+    opacity: 0;
+    transition: opacity 0.14s, color 0.14s;
+    line-height: 1;
+  }
+  .task-item:hover .task-drag-handle { opacity: 1; }
+  .task-item.kb-focus .task-drag-handle { opacity: 1; }
+  .task-drag-handle:active { cursor: grabbing; }
+
+  .task-item.task-dragging {
+    opacity: 0.35;
+  }
+
+  .task-list.task-drag-over {
+    outline: 2px dashed rgba(74,154,186,0.4);
+    outline-offset: -2px;
+    border-radius: 4px;
+  }
+
+  .task-drop-indicator {
+    height: 2px;
+    background: #4a9aba;
+    border-radius: 2px;
+    margin: 0 17px;
+    pointer-events: none;
+  }
+  #kb-btn {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 300;
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 7px 13px;
+    border-radius: 99px;
+    border: 1px solid rgba(30,60,50,0.18);
+    background: rgba(255,255,255,0.75);
+    color: rgba(25,50,42,0.55);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    transition: all 0.15s;
+  }
+  #kb-btn:hover {
+    background: rgba(255,255,255,0.95);
+    color: #1a3028;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.14);
+    transform: translateY(-1px);
+  }
+
+  #kb-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    background: rgba(20,40,30,0.3);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+  }
+  #kb-modal-overlay.open { display: flex; animation: fadeIn 0.18s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  #kb-modal {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 16px 50px rgba(0,0,0,0.16);
+    padding: 28px 30px 24px;
+    width: 340px;
+    max-width: calc(100vw - 40px);
+    animation: slideUp 0.2s ease;
+  }
+
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  #kb-modal h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a3028;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .kb-group { margin-bottom: 16px; }
+  .kb-group-title {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .kb-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .kb-row:last-child { border-bottom: none; }
+
+  .kb-desc {
+    font-size: 12px;
+    color: #1a3028;
+    font-weight: 400;
+  }
+
+  .kb-keys {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  kbd {
+    font-family: 'Poppins', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 var(--border);
+    color: #1a3028;
+    white-space: nowrap;
+  }
+
+  #kb-modal-close {
+    display: block;
+    width: 100%;
+    margin-top: 18px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.14s;
+  }
+  #kb-modal-close:hover { background: var(--surface); color: #1a3028; }
+
+  /* ── HERO FOCUS BUTTON ───────────────────────── */
+  #hero {
+    position: relative; /* ensure children position against hero */
+  }
+  #hero-focus-btn {
+    position: absolute;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 6px 14px;
+    border-radius: 99px;
+    border: 1.5px solid rgba(30,60,50,0.25);
+    background: rgba(255,255,255,0.35);
+    color: #1a3028;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: all 0.15s;
+  }
+  #hero-focus-btn:hover { background: rgba(255,255,255,0.6); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+  /* ── TASK FOCUS BUTTON ───────────────────────── */
+  .focus-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 3px;
+    line-height: 1;
+    opacity: 0;
+    font-size: 12px;
+    transition: opacity 0.14s, transform 0.14s;
+    flex-shrink: 0;
+    filter: grayscale(1) opacity(0.4);
+  }
+  .task-item:hover .focus-btn { opacity: 1; }
+  .task-item.focused .focus-btn { opacity: 1; filter: none; }
+  .focus-btn:hover { transform: scale(1.2); filter: none !important; opacity: 1 !important; }
+  .task-item.focused {
+    background: linear-gradient(90deg, #d4e8f5 0%, #c8dff0 25%, #a8d4c4 65%, #c2e0b8 100%) !important;
+    border-left-color: transparent;
+  }
+  .task-item.focused:hover {
+    background: linear-gradient(90deg, #c8e0f0 0%, #b8d4e8 25%, #98ccb8 65%, #b4d8ac 100%) !important;
+  }
+
+  /* ── FOCUS MODE OVERLAY ──────────────────────── */
+  #focus-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: linear-gradient(160deg,
+      #c8dff0 0%, #b8d4e8 25%, #9fc8d8 50%,
+      #a8d4c4 70%, #b0dab8 85%, #c8e4bc 100%
+    );
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  #focus-overlay.open { display: flex; }
+  #focus-overlay.visible { opacity: 1; }
+
+  #focus-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 30% 35%, rgba(255,255,255,0.35) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  #focus-close {
+    position: absolute;
+    top: 22px;
+    right: 26px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(25,50,42,0.5);
+    background: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 99px;
+    padding: 6px 14px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: all 0.15s;
+  }
+  #focus-close:hover { background: rgba(255,255,255,0.7); color: #1a3028; }
+
+  /* task picker */
+  #focus-picker {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+    z-index: 1;
+  }
+  #focus-picker.active { display: flex; }
+
+  #focus-picker h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a3028;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  #focus-picker p {
+    font-size: 13px;
+    color: rgba(25,50,42,0.55);
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  #focus-pick-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .focus-pick-btn {
+    width: 100%;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a3028;
+    backdrop-filter: blur(6px);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .focus-pick-btn:hover { background: rgba(255,255,255,0.82); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .focus-pick-btn .pick-flag { font-size: 14px; flex-shrink: 0; }
+  .focus-pick-btn .pick-section { font-size: 10px; color: rgba(25,50,42,0.45); display: block; margin-top: 2px; }
+
+  /* active focus session */
+  #focus-session {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+    max-width: 520px;
+    position: relative;
+    z-index: 1;
+  }
+  #focus-session.active { display: flex; }
+
+  #focus-task-label {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a3028;
+    text-align: center;
+    line-height: 1.3;
+    margin-bottom: 6px;
+    max-width: 460px;
+  }
+  #focus-task-section {
+    font-size: 11px;
+    color: rgba(25,50,42,0.45);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 48px;
+  }
+
+  /* pomodoro timer */
+  #pomodoro-ring-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin-bottom: 28px;
+  }
+
+  #pomodoro-svg {
+    width: 200px;
+    height: 200px;
+    transform: rotate(-90deg);
+  }
+
+  #pomodoro-track {
+    fill: none;
+    stroke: rgba(30,60,50,0.1);
+    stroke-width: 6;
+  }
+
+  #pomodoro-progress {
+    fill: none;
+    stroke: #3aac8a;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 565;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.4s;
+  }
+
+  #pomodoro-ring-wrap.break #pomodoro-progress { stroke: #e8a020; }
+
+  #pomodoro-time {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  #pomodoro-digits {
+    font-size: 42px;
+    font-weight: 700;
+    color: #1a3028;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  #pomodoro-phase {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(25,50,42,0.45);
+  }
+
+  .pomo-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .pomo-btn {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 22px;
+    border-radius: 99px;
+    border: 1.5px solid rgba(30,60,50,0.2);
+    background: rgba(255,255,255,0.45);
+    color: #1a3028;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: all 0.15s;
+  }
+  .pomo-btn:hover { background: rgba(255,255,255,0.75); }
+  .pomo-btn.primary { background: rgba(30,60,50,0.75); color: #fff; border-color: transparent; }
+  .pomo-btn.primary:hover { background: rgba(30,60,50,0.9); }
+
+  #focus-complete-btn {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 26px;
+    border-radius: 99px;
+    border: none;
+    background: rgba(39,168,95,0.85);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #focus-complete-btn:hover { background: rgba(39,168,95,1); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(39,168,95,0.35); }
+</style>
+</head>
+</head>
+<body>
+
+<!-- HERO -->
+<div id="hero">
+  <div id="hero-title">QuickList</div>
+  <div id="hero-label">
+    <div id="hero-counter"><span id="hero-done">0 / 0</span> tasks <span id="hero-pct">0%</span></div>
+    <div id="hero-celebration">
+      <span id="hero-cel-icon"></span>
+      <span id="hero-cel-text"></span>
+      <button id="hero-cel-dismiss" onclick="dismissCelebration()" title="Dismiss">✕</button>
+    </div>
+  </div>
+  <div id="hero-bar-track">
+    <div id="hero-bar-fill"></div>
+  </div>
+  <button id="hero-focus-btn" onclick="openFocus()">⊙ Focus</button>
+</div>
+
+<!-- FOCUS MODE OVERLAY -->
+<div id="focus-overlay">
+  <button id="focus-close" onclick="closeFocus()">✕ Exit Focus</button>
+
+  <!-- Task picker (when no focused task) -->
+  <div id="focus-picker">
+    <h2>What are you focusing on?</h2>
+    <p>Pick a task to work on — prioritized tasks shown first.</p>
+    <div id="focus-pick-list"></div>
+  </div>
+
+  <!-- Active session -->
+  <div id="focus-session">
+    <div id="focus-task-label">Task name here</div>
+    <div id="focus-task-section">List name</div>
+
+    <div id="pomodoro-ring-wrap">
+      <svg id="pomodoro-svg" viewBox="0 0 200 200">
+        <circle id="pomodoro-track" cx="100" cy="100" r="90"/>
+        <circle id="pomodoro-progress" cx="100" cy="100" r="90"/>
+      </svg>
+      <div id="pomodoro-time">
+        <div id="pomodoro-digits">25:00</div>
+        <div id="pomodoro-phase">Focus</div>
+      </div>
+    </div>
+
+    <div class="pomo-controls">
+      <button class="pomo-btn" id="pomo-reset-btn" onclick="pomodoroReset()">↺ Reset</button>
+      <button class="pomo-btn primary" id="pomo-start-btn" onclick="pomodoroToggle()">▶ Start</button>
+      <button class="pomo-btn" onclick="pomodoroSkip()">Skip →</button>
+    </div>
+
+    <button id="focus-complete-btn" onclick="focusCompleteTask()">✓ Mark Complete</button>
+  </div>
+</div>
+
+<!-- SPLASH / INBOX ZERO -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="splash-icon" id="splash-icon">✦</div>
+    <div class="splash-headline" id="splash-headline">What are we doing today?</div>
+    <div class="splash-sub" id="splash-sub">Create a list and start adding tasks.</div>
+    <div class="splash-actions">
+      <button class="splash-btn splash-btn-primary" onclick="splashCreateList()">+ Create New List</button>
+      <button class="splash-btn splash-btn-secondary" onclick="splashShowLists()">Show Task Lists</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="sections-container"></div>
+  <div id="add-section-wrap">
+    <button id="add-section-btn" onclick="addSection()">+ Add Task List</button>
+  </div>
+</div>
+
+<script>
+let sectionCount = 0;
+let forceSplashHidden = false;
+
+// Palette of soft tinted gradients [gradientStart, gradientEnd, barColor]
+const PALETTES = [
+  ['#fdf0f0','#fff6f6','#e05a5a'],  // rose
+  ['#edf4ff','#f4f8ff','#4a86d4'],  // sky blue
+  ['#edf7f2','#f4fbf7','#3aad6a'],  // mint
+  ['#f3eeff','#f8f4ff','#8a5ce8'],  // lavender
+  ['#fff5e8','#fffaf2','#d4862a'],  // amber
+  ['#e8f6f8','#f2fbfc','#2aadbe'],  // teal
+  ['#fde8f5','#fef2fa','#d45cab'],  // pink
+  ['#eaf0e8','#f2f7f0','#5a9650'],  // sage
+];
+
+let paletteIndex = 0;
+
+function nextPalette() {
+  const p = PALETTES[paletteIndex % PALETTES.length];
+  paletteIndex++;
+  return p;
+}
+
+function createSection(name = '') {
+  sectionCount++;
+  const id = 'sec-' + sectionCount;
+  const defaultName = name || 'Task List ' + sectionCount;
+  const [c1, c2, barColor] = nextPalette();
+
+  const card = document.createElement('div');
+  card.className = 'section-card';
+  card.id = id;
+  card.dataset.barColor = barColor;
+  card.dataset.c1 = c1;
+  card.dataset.c2 = c2;
+  card.dataset.filter = 'all';
+  card.style.cssText = `background: linear-gradient(135deg, ${c1} 0%, ${c2} 100%); --sec-color: ${barColor};`;
+
+  card.innerHTML = `
+    <div class="section-header">
+      <div class="section-top">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <button class="collapse-btn" onclick="toggleCollapse('${id}')" title="Collapse / expand">▾</button>
+        <input class="section-name" value="${defaultName}" spellcheck="false" title="Click to rename"
+          onkeydown="if(event.key==='Enter'&&event.shiftKey){event.preventDefault();addSection();}else if(event.key==='Enter'){event.preventDefault();document.getElementById('${id}-input').focus();}" />
+        <div class="section-actions">
+          <button class="filter-btn active-all" id="${id}-filter" onclick="cycleFilter('${id}')">All</button>
+          <button class="btn btn-reset" onclick="resetTasks('${id}')" title="Uncheck all">↺ reset</button>
+          <button class="btn btn-danger" onclick="clearSection('${id}')" title="Delete all tasks">✕ clear</button>
+          <button class="delete-section-btn" onclick="deleteSection('${id}')" title="Delete list">⌫</button>
+        </div>
+      </div>
+      <div class="section-progress-row">
+        <div class="section-bar-track">
+          <div class="section-bar-fill" id="${id}-bar" style="background:${barColor}"></div>
+        </div>
+        <span class="section-pct" id="${id}-pct">0%</span>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="task-list" id="${id}-tasks">
+        <div class="empty-hint">No tasks yet — add one below.</div>
+      </div>
+      <div class="add-task-row">
+        <input class="add-task-input" id="${id}-input" placeholder="Add a task…"
+          onkeydown="handleTaskKey(event, '${id}')" />
+        <button class="add-task-btn" onclick="addTask('${id}')">↵</button>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function _wireSection(card, id) {
+  initDrag(card);
+  const list = card.querySelector(`#${id}-tasks`);
+  if (list) initTaskListDrop(list, id);
+  const nameInput = card.querySelector('.section-name');
+  if (nameInput) nameInput.addEventListener('blur', () => saveState());
+}
+
+function addSection() {
+  forceSplashHidden = true;
+  hideSplash();
+  const container = document.getElementById('sections-container');
+  const card = createSection();
+  container.appendChild(card);
+  _wireSection(card, card.id);
+  updateHero();
+  saveState();
+  card.querySelector('.section-name').focus();
+  card.querySelector('.section-name').select();
+}
+
+function deleteSection(id) {
+  const card = document.getElementById(id);
+  if (card) card.remove();
+  updateHero();
+  checkSplash();
+  saveState();
+}
+
+// ── FILTER ──────────────────────────────────────
+const FILTER_CYCLE = ['all','open','done'];
+const FILTER_LABELS = { all: 'All', open: 'Open', done: 'Done' };
+const FILTER_CLASSES = { all: 'active-all', open: 'active-open', done: 'active-done' };
+
+function cycleFilter(sectionId) {
+  const card = document.getElementById(sectionId);
+  const current = card.dataset.filter || 'all';
+  const idx = FILTER_CYCLE.indexOf(current);
+  const next = FILTER_CYCLE[(idx + 1) % FILTER_CYCLE.length];
+  card.dataset.filter = next;
+
+  const btn = document.getElementById(sectionId + '-filter');
+  btn.textContent = FILTER_LABELS[next];
+  btn.className = 'filter-btn ' + FILTER_CLASSES[next];
+
+  applyFilter(sectionId);
+  saveState();
+}
+
+function applyFilter(sectionId) {
+  const card = document.getElementById(sectionId);
+  const filter = card.dataset.filter || 'all';
+  const list = document.getElementById(sectionId + '-tasks');
+  list.querySelectorAll('.task-item').forEach(item => {
+    const isDone = item.classList.contains('done');
+    let hide = false;
+    if (filter === 'open' && isDone)  hide = true;
+    if (filter === 'done' && !isDone) hide = true;
+    item.classList.toggle('hidden', hide);
+  });
+}
+
+// ── TASKS ────────────────────────────────────────
+function handleTaskKey(e, sectionId) {
+  if (e.key === 'Enter' && e.shiftKey) {
+    e.preventDefault();
+    addSection();
+  } else if (e.key === 'Enter') {
+    addTask(sectionId);
+  }
+}
+
+function addTask(sectionId) {
+  const input = document.getElementById(sectionId + '-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const list = document.getElementById(sectionId + '-tasks');
+  const hint = list.querySelector('.empty-hint');
+  if (hint) hint.remove();
+
+  const taskId = 'task-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  const item = buildTaskEl(taskId, sectionId, text);
+
+  const priorities = list.querySelectorAll('.task-item.priority');
+  if (priorities.length > 0) priorities[priorities.length-1].after(item);
+  else list.appendChild(item);
+
+  applyFilter(sectionId);
+  updateSection(sectionId);
+  checkSplash();
+  saveState();
+  input.focus();
+}
+
+function buildTaskEl(taskId, sectionId, text) {
+  const item = document.createElement('div');
+  item.className = 'task-item';
+  item.id = taskId;
+  item.setAttribute('tabindex', '0');
+  item.setAttribute('data-section', sectionId);
+  item.setAttribute('draggable', 'true');
+  item.innerHTML = `
+    <span class="task-drag-handle" title="Drag to reorder">⠿</span>
+    <label class="cb-wrap">
+      <input type="checkbox" onchange="onCheck('${sectionId}','${taskId}',this)" />
+      <div class="cb-box">
+        <svg class="cb-check" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </label>
+    <span class="task-label" ondblclick="editTaskLabel(this)" title="Double-click to rename">${escapeHtml(text)}</span>
+    <button class="focus-btn" onclick="openFocusOnTask('${sectionId}','${taskId}')" title="Focus on this task">⊙</button>
+    <button class="flag-btn" onclick="togglePriority('${sectionId}','${taskId}')" title="Flag priority">🚩</button>
+    <button class="task-delete" onclick="deleteTask('${sectionId}','${taskId}')" title="Remove">×</button>
+  `;
+  item.addEventListener('focus',   () => setKbFocus(item));
+  item.addEventListener('blur',    () => item.classList.remove('kb-focus'));
+  item.addEventListener('keydown', e => handleTaskItemKey(e, item, sectionId, taskId));
+
+  // Task drag events
+  item.addEventListener('dragstart', e => {
+    if (e.target.classList.contains('task-drag-handle') || e.target === item) {
+      taskDragSrc = item;
+      taskDragSrcSection = sectionId;
+      item.classList.add('task-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', taskId);
+      // Prevent section drag from firing
+      e.stopPropagation();
+    } else {
+      e.preventDefault();
+    }
+  });
+  item.addEventListener('dragend', () => {
+    item.classList.remove('task-dragging');
+    clearTaskDropIndicator();
+    taskDragSrc = null;
+    taskDragSrcSection = null;
+    saveState();
+  });
+
+  return item;
+}
+
+function togglePriority(sectionId, taskId) {
+  const item = document.getElementById(taskId);
+  if (!item) return;
+  const list = document.getElementById(sectionId + '-tasks');
+  const wasPriority = item.classList.contains('priority');
+  item.classList.toggle('priority', !wasPriority);
+
+  if (!wasPriority) {
+    list.insertBefore(item, list.firstChild);
+  } else {
+    const priorities = [...list.querySelectorAll('.task-item.priority')];
+    if (priorities.length > 0) priorities[priorities.length-1].after(item);
+    else list.appendChild(item);
+  }
+  applyFilter(sectionId);
+  saveState();
+}
+
+function editTaskLabel(span) {
+  if (span.classList.contains('editing')) return;
+  span.classList.add('editing');
+  span.contentEditable = 'true';
+  span.focus();
+  // Select all text
+  const range = document.createRange();
+  range.selectNodeContents(span);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  function commit() {
+    span.contentEditable = 'false';
+    span.classList.remove('editing');
+    const newText = span.textContent.trim();
+    if (!newText) span.textContent = 'Untitled task';
+    // Update focus overlay if this task is currently focused
+    const item = span.closest('.task-item');
+    if (item && item.id === focusTaskId) {
+      document.getElementById('focus-task-label').textContent = span.textContent;
+    }
+    saveState();
+  }
+
+  span.addEventListener('keydown', function onKey(e) {
+    if (e.key === 'Enter') { e.preventDefault(); span.blur(); }
+    if (e.key === 'Escape') { span.textContent = span.dataset.original || span.textContent; span.blur(); }
+  }, { once: false });
+
+  span.addEventListener('blur', commit, { once: true });
+  span.dataset.original = span.textContent;
+}
+
+
+function toggleCollapse(sectionId) {
+  document.getElementById(sectionId).classList.toggle('collapsed');
+  saveState();
+}
+
+// ── TASK DRAG & DROP ──────────────────────────────
+let taskDragSrc = null;
+let taskDragSrcSection = null;
+
+function clearTaskDropIndicator() {
+  document.querySelectorAll('.task-drop-indicator').forEach(el => el.remove());
+  document.querySelectorAll('.task-list.task-drag-over').forEach(el => el.classList.remove('task-drag-over'));
+}
+
+function initTaskListDrop(list, sectionId) {
+  list.addEventListener('dragover', e => {
+    if (!taskDragSrc) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    clearTaskDropIndicator();
+    list.classList.add('task-drag-over');
+
+    // Find insertion point
+    const tasks = [...list.querySelectorAll('.task-item:not(.task-dragging)')];
+    let insertBefore = null;
+    for (const t of tasks) {
+      const rect = t.getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) { insertBefore = t; break; }
+    }
+    const indicator = document.createElement('div');
+    indicator.className = 'task-drop-indicator';
+    if (insertBefore) list.insertBefore(indicator, insertBefore);
+    else list.appendChild(indicator);
+  });
+
+  list.addEventListener('dragleave', e => {
+    if (!list.contains(e.relatedTarget)) {
+      clearTaskDropIndicator();
+    }
+  });
+
+  list.addEventListener('drop', e => {
+    if (!taskDragSrc) return;
+    e.preventDefault();
+    e.stopPropagation();
+    clearTaskDropIndicator();
+
+    const tasks = [...list.querySelectorAll('.task-item:not(.task-dragging)')];
+    let insertBefore = null;
+    for (const t of tasks) {
+      const rect = t.getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) { insertBefore = t; break; }
+    }
+
+    // Remove empty hint if moving into a new section
+    const hint = list.querySelector('.empty-hint');
+    if (hint) hint.remove();
+
+    if (insertBefore) list.insertBefore(taskDragSrc, insertBefore);
+    else list.appendChild(taskDragSrc);
+
+    // If moving to a different section, update section id references
+    const oldSectionId = taskDragSrcSection;
+    if (oldSectionId !== sectionId) {
+      taskDragSrc.setAttribute('data-section', sectionId);
+      const taskId = taskDragSrc.id;
+      // Rewire checkbox and buttons with new sectionId
+      const cb = taskDragSrc.querySelector('input[type=checkbox]');
+      if (cb) cb.setAttribute('onchange', `onCheck('${sectionId}','${taskId}',this)`);
+      const flagBtn = taskDragSrc.querySelector('.flag-btn');
+      if (flagBtn) flagBtn.setAttribute('onclick', `togglePriority('${sectionId}','${taskId}')`);
+      const delBtn = taskDragSrc.querySelector('.task-delete');
+      if (delBtn) delBtn.setAttribute('onclick', `deleteTask('${sectionId}','${taskId}')`);
+      // Reattach keydown with new sectionId
+      const newItem = taskDragSrc;
+      newItem.onkeydown = null;
+      newItem.addEventListener('keydown', ev => handleTaskItemKey(ev, newItem, sectionId, taskId));
+      checkEmpty(oldSectionId);
+      updateSection(oldSectionId);
+    }
+
+    updateSection(sectionId);
+    checkSplash();
+    saveState();
+  });
+}
+
+// ── KEYBOARD NAV ─────────────────────────────────
+function setKbFocus(item) {
+  document.querySelectorAll('.task-item.kb-focus').forEach(el => el.classList.remove('kb-focus'));
+  item.classList.add('kb-focus');
+}
+
+function getVisibleTasks() {
+  return [...document.querySelectorAll('.task-item:not(.hidden)')].filter(el => {
+    // skip tasks inside a collapsed section
+    const body = el.closest('.section-body');
+    const card = el.closest('.section-card');
+    return !(card && card.classList.contains('collapsed'));
+  });
+}
+
+function handleTaskItemKey(e, item, sectionId, taskId) {
+  const key = e.key;
+
+  if (key === 'ArrowDown' || key === 'ArrowUp') {
+    e.preventDefault();
+    const all = getVisibleTasks();
+    const idx = all.indexOf(item);
+    const next = key === 'ArrowDown' ? all[idx + 1] : all[idx - 1];
+    if (next) { next.focus(); setKbFocus(next); }
+    return;
+  }
+
+  if (key === 't' || key === 'T') {
+    if (document.activeElement === item) {
+      e.preventDefault();
+      const cb = item.querySelector('input[type=checkbox]');
+      cb.checked = !cb.checked;
+      cb.dispatchEvent(new Event('change'));
+    }
+  }
+
+  if (key === 'p' || key === 'P') {
+    if (document.activeElement === item) {
+      e.preventDefault();
+      // capture next sibling before reorder
+      const all = getVisibleTasks();
+      const idx = all.indexOf(item);
+      togglePriority(sectionId, taskId);
+      // after DOM reorder, focus the item that was below us
+      const nextItem = all[idx + 1] && all[idx + 1] !== item ? all[idx + 1] : all[idx - 1];
+      if (nextItem) { setTimeout(() => { nextItem.focus(); setKbFocus(nextItem); }, 0); }
+    }
+  }
+}
+
+// Global arrow key nav when focused inside a task input, move to task items above/below
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function onCheck(sectionId, taskId, cb) {
+  const item = document.getElementById(taskId);
+  item.classList.toggle('done', cb.checked);
+  applyFilter(sectionId);
+  updateSection(sectionId);
+  checkSplash();
+  saveState();
+}
+
+function deleteTask(sectionId, taskId) {
+  const item = document.getElementById(taskId);
+  if (item) item.remove();
+  checkEmpty(sectionId);
+  updateSection(sectionId);
+  checkSplash();
+  saveState();
+}
+
+function checkEmpty(sectionId) {
+  const list = document.getElementById(sectionId + '-tasks');
+  if (list && list.querySelectorAll('.task-item').length === 0) {
+    list.innerHTML = '<div class="empty-hint">No tasks yet — add one below.</div>';
+  }
+}
+
+function resetTasks(sectionId) {
+  document.getElementById(sectionId + '-tasks').querySelectorAll('.task-item').forEach(item => {
+    item.classList.remove('done');
+    const cb = item.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = false;
+  });
+  applyFilter(sectionId);
+  updateSection(sectionId);
+  checkSplash();
+  saveState();
+}
+
+function clearSection(sectionId) {
+  document.getElementById(sectionId + '-tasks').innerHTML =
+    '<div class="empty-hint">No tasks yet — add one below.</div>';
+  updateSection(sectionId);
+  checkSplash();
+  saveState();
+}
+
+function updateSection(sectionId) {
+  const list = document.getElementById(sectionId + '-tasks');
+  const tasks = list.querySelectorAll('.task-item');
+  const total = tasks.length;
+  const done  = [...tasks].filter(t => t.classList.contains('done')).length;
+  const pct   = total === 0 ? 0 : Math.round((done / total) * 100);
+
+  const bar = document.getElementById(sectionId + '-bar');
+  const pctLabel = document.getElementById(sectionId + '-pct');
+  const card = document.getElementById(sectionId);
+  const barColor = card ? card.dataset.barColor : 'var(--accent)';
+
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = pct === 100 ? 'var(--green)' : barColor;
+  }
+  if (pctLabel) pctLabel.textContent = pct + '%';
+  updateHero();
+}
+
+let celebrationShown = false;
+
+function updateHero() {
+  const allTasks = document.querySelectorAll('.task-item');
+  const total = allTasks.length;
+  const done  = [...allTasks].filter(t => t.classList.contains('done')).length;
+  const pct   = total === 0 ? 0 : Math.round((done / total) * 100);
+
+  document.getElementById('hero-bar-fill').style.width = pct + '%';
+  document.getElementById('hero-pct').textContent = pct + '%';
+  document.getElementById('hero-done').textContent = done + ' / ' + total;
+
+  const hero = document.getElementById('hero');
+  if (total > 0 && pct === 100) {
+    hero.classList.add('complete');
+    if (!celebrationShown) {
+      celebrationShown = true;
+      triggerCelebration();
+    }
+  } else {
+    hero.classList.remove('complete');
+    celebrationShown = false;
+  }
+}
+
+async function triggerCelebration() {
+  // Show a placeholder immediately, then swap in the AI phrase
+  document.getElementById('hero-cel-icon').textContent = '✦';
+  document.getElementById('hero-cel-text').textContent = 'All done…';
+  const phrase = await fetchAIPhrase();
+  document.getElementById('hero-cel-icon').textContent = phrase.icon;
+  document.getElementById('hero-cel-text').textContent = phrase.headline;
+}
+
+function dismissCelebration() {
+  document.getElementById('hero').classList.remove('complete');
+  celebrationShown = false;
+}
+
+// ── AI PHRASE ─────────────────────────────────────
+const FALLBACK_PHRASES = [
+  { icon: '🌿', headline: 'All done. Breathe.', sub: 'Every task cleared. You earned this moment.' },
+  { icon: '✨', headline: 'Inbox zero achieved.', sub: 'Nothing left to do but enjoy the quiet.' },
+  { icon: '🌅', headline: 'Tasks complete.', sub: 'Time to step away and recharge.' },
+  { icon: '🎯', headline: 'Nailed it.', sub: 'Every item checked off. Well done.' },
+  { icon: '☁️', headline: 'Clear skies ahead.', sub: 'No more tasks. The rest of the day is yours.' },
+];
+
+async function fetchAIPhrase() {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 120,
+        system: 'You generate short, calming, human completion messages for a task app. Respond ONLY with valid JSON, no markdown. Format: {"icon":"<single emoji>","headline":"<3-6 word headline>","sub":"<one calm sentence, max 12 words>"}. Be warm, witty, or poetic — vary the tone each time.',
+        messages: [{ role: 'user', content: 'Generate a fresh completion message.' }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text?.trim();
+    if (!text) throw new Error('no text');
+    return JSON.parse(text);
+  } catch {
+    return FALLBACK_PHRASES[Math.floor(Math.random() * FALLBACK_PHRASES.length)];
+  }
+}
+
+// ── SPLASH SHOW / HIDE ────────────────────────────
+const splash = document.getElementById('splash');
+let splashVisible = false;
+
+async function showSplash(fetchPhrase = false) {
+  if (splashVisible) return;
+  splashVisible = true;
+
+  // Reset to neutral while loading
+  document.getElementById('splash-icon').textContent = '…';
+  document.getElementById('splash-headline').textContent = 'One moment…';
+  document.getElementById('splash-sub').textContent = '';
+
+  splash.style.display = 'flex';
+  // Slight rAF delay so display:flex registers before opacity transition
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    splash.classList.add('visible');
+  }));
+
+  if (fetchPhrase) {
+    const phrase = await fetchAIPhrase();
+    document.getElementById('splash-icon').textContent = phrase.icon;
+    document.getElementById('splash-headline').textContent = phrase.headline;
+    document.getElementById('splash-sub').textContent = phrase.sub;
+  } else {
+    document.getElementById('splash-icon').textContent = '✦';
+    document.getElementById('splash-headline').textContent = 'What are we doing today?';
+    document.getElementById('splash-sub').textContent = 'Create a list and start adding tasks.';
+  }
+}
+
+function hideSplash() {
+  splashVisible = false;
+  splash.classList.remove('visible');
+  setTimeout(() => { splash.style.display = 'none'; }, 300);
+}
+
+// ── CHECK SPLASH (on load / task add/delete) ───────
+function checkSplash() {
+  const allTasks = document.querySelectorAll('.task-item');
+  const anySections = document.querySelectorAll('.section-card').length > 0;
+  // Only splash if there are no sections at all AND not suppressed
+  if (!forceSplashHidden && !anySections && allTasks.length === 0) {
+    showSplash(false);
+  } else {
+    hideSplash();
+  }
+}
+
+function splashCreateList() {
+  forceSplashHidden = true;
+  hideSplash();
+  setTimeout(() => addSection(), 320);
+}
+
+function splashShowLists() {
+  forceSplashHidden = true;
+  hideSplash();
+  if (document.querySelectorAll('.section-card').length === 0) {
+    setTimeout(() => addSection(), 320);
+  }
+  updateHero();
+}
+
+// ── DRAG & DROP SECTIONS ──────────────────────────
+let dragSrc = null;
+
+function initDrag(card) {
+  card.setAttribute('draggable', 'true');
+
+  card.addEventListener('dragstart', e => {
+    dragSrc = card;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', card.id);
+  });
+
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    document.querySelectorAll('.section-card.drag-over')
+      .forEach(c => c.classList.remove('drag-over'));
+    dragSrc = null;
+  });
+
+  card.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragSrc && dragSrc !== card) {
+      document.querySelectorAll('.section-card.drag-over')
+        .forEach(c => c.classList.remove('drag-over'));
+      card.classList.add('drag-over');
+    }
+  });
+
+  card.addEventListener('dragleave', () => {
+    card.classList.remove('drag-over');
+  });
+
+  card.addEventListener('drop', e => {
+    e.preventDefault();
+    card.classList.remove('drag-over');
+    if (!dragSrc || dragSrc === card) return;
+
+    const container = document.getElementById('sections-container');
+    const cards = [...container.querySelectorAll('.section-card')];
+    const srcIdx = cards.indexOf(dragSrc);
+    const tgtIdx = cards.indexOf(card);
+
+    if (srcIdx < tgtIdx) card.after(dragSrc);
+    else card.before(dragSrc);
+    saveState();
+  });
+}
+
+// ── FOCUS MODE ────────────────────────────────────
+let focusTaskId = null;
+let focusSectionId = null;
+const FOCUS_TASK_KEY = 'quicklist-focus-task';
+
+const POMO_WORK  = 25 * 60;
+const POMO_BREAK =  5 * 60;
+let pomoPhase    = 'work'; // 'work' | 'break'
+let pomoSeconds  = POMO_WORK;
+let pomoRunning  = false;
+let pomoInterval = null;
+const CIRCUMFERENCE = 2 * Math.PI * 90; // ≈ 565.5
+
+function openFocus() {
+  // Try to restore last focused task
+  const saved = localStorage.getItem(FOCUS_TASK_KEY);
+  if (saved) {
+    try {
+      const { taskId, sectionId } = JSON.parse(saved);
+      const item = document.getElementById(taskId);
+      if (item && !item.classList.contains('done')) {
+        openFocusOnTask(sectionId, taskId);
+        return;
+      }
+    } catch(e) {}
+  }
+  // No valid saved task — show picker
+  showFocusPicker();
+}
+
+function showFocusPicker() {
+  const overlay = document.getElementById('focus-overlay');
+  document.getElementById('focus-picker').classList.add('active');
+  document.getElementById('focus-session').classList.remove('active');
+
+  // Gather up to 3 uncompleted tasks — flagged priority first
+  const all = [...document.querySelectorAll('.task-item:not(.done)')];
+  const flagged   = all.filter(t => t.classList.contains('priority'));
+  const unflagged = all.filter(t => !t.classList.contains('priority'));
+  const candidates = [...flagged, ...unflagged].slice(0, 3);
+
+  const list = document.getElementById('focus-pick-list');
+  list.innerHTML = '';
+  if (candidates.length === 0) {
+    list.innerHTML = '<p style="color:rgba(25,50,42,0.5);font-size:13px;text-align:center;">No incomplete tasks found.</p>';
+  } else {
+    candidates.forEach(item => {
+      const taskId    = item.id;
+      const sectionId = item.getAttribute('data-section');
+      const label     = item.querySelector('.task-label')?.textContent || '';
+      const isPriority = item.classList.contains('priority');
+      const sectionName = document.getElementById(sectionId)?.querySelector('.section-name')?.value || '';
+
+      const btn = document.createElement('button');
+      btn.className = 'focus-pick-btn';
+      btn.innerHTML = `
+        <span class="pick-flag">${isPriority ? '🚩' : '·'}</span>
+        <span>
+          ${escapeHtml(label)}
+          <span class="pick-section">${escapeHtml(sectionName)}</span>
+        </span>
+      `;
+      btn.onclick = () => openFocusOnTask(sectionId, taskId);
+      list.appendChild(btn);
+    });
+  }
+
+  overlay.classList.add('open');
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
+}
+
+function openFocusOnTask(sectionId, taskId) {
+  const item = document.getElementById(taskId);
+  if (!item) return;
+
+  // Clear previous focused styling
+  document.querySelectorAll('.task-item.focused').forEach(el => el.classList.remove('focused'));
+  item.classList.add('focused');
+  focusTaskId   = taskId;
+  focusSectionId = sectionId;
+  localStorage.setItem(FOCUS_TASK_KEY, JSON.stringify({ taskId, sectionId }));
+
+  const label = item.querySelector('.task-label')?.textContent || '';
+  const sectionName = document.getElementById(sectionId)?.querySelector('.section-name')?.value || '';
+
+  document.getElementById('focus-task-label').textContent   = label;
+  document.getElementById('focus-task-section').textContent = sectionName;
+  document.getElementById('focus-picker').classList.remove('active');
+  document.getElementById('focus-session').classList.add('active');
+
+  // Reset pomodoro
+  pomodoroReset();
+
+  const overlay = document.getElementById('focus-overlay');
+  overlay.classList.add('open');
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
+}
+
+function closeFocus() {
+  const overlay = document.getElementById('focus-overlay');
+  overlay.classList.remove('visible');
+  pomodoroStop();
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    document.getElementById('focus-picker').classList.remove('active');
+    document.getElementById('focus-session').classList.remove('active');
+  }, 300);
+}
+
+function focusCompleteTask() {
+  if (!focusTaskId) return;
+  const item = document.getElementById(focusTaskId);
+  if (item) {
+    const cb = item.querySelector('input[type=checkbox]');
+    if (cb && !cb.checked) {
+      cb.checked = true;
+      cb.dispatchEvent(new Event('change'));
+    }
+  }
+  localStorage.removeItem(FOCUS_TASK_KEY);
+  focusTaskId = null;
+  closeFocus();
+}
+
+// ── POMODORO ──────────────────────────────────────
+function pomodoroRender() {
+  const total   = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+  const elapsed = total - pomoSeconds;
+  const offset  = CIRCUMFERENCE * (elapsed / total);
+
+  document.getElementById('pomodoro-progress').style.strokeDashoffset = offset;
+  document.getElementById('pomodoro-digits').textContent =
+    String(Math.floor(pomoSeconds / 60)).padStart(2,'0') + ':' +
+    String(pomoSeconds % 60).padStart(2,'0');
+  document.getElementById('pomodoro-phase').textContent = pomoPhase === 'work' ? 'Focus' : 'Break';
+  document.getElementById('pomodoro-ring-wrap').classList.toggle('break', pomoPhase === 'break');
+  document.getElementById('pomo-start-btn').textContent = pomoRunning ? '⏸ Pause' : '▶ Start';
+}
+
+function pomodoroToggle() {
+  if (pomoRunning) { pomodoroStop(); }
+  else {
+    pomoRunning = true;
+    pomoInterval = setInterval(() => {
+      pomoSeconds--;
+      if (pomoSeconds <= 0) {
+        pomodoroStop();
+        // Auto-switch phase
+        pomoPhase   = pomoPhase === 'work' ? 'break' : 'work';
+        pomoSeconds = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+      }
+      pomodoroRender();
+    }, 1000);
+  }
+  pomodoroRender();
+}
+
+function pomodoroStop() {
+  pomoRunning = false;
+  clearInterval(pomoInterval);
+  pomoInterval = null;
+  pomodoroRender();
+}
+
+function pomodoroReset() {
+  pomodoroStop();
+  pomoPhase   = 'work';
+  pomoSeconds = POMO_WORK;
+  const prog = document.getElementById('pomodoro-progress');
+  if (prog) prog.style.strokeDashoffset = 0;
+  pomodoroRender();
+}
+
+function pomodoroSkip() {
+  pomodoroStop();
+  pomoPhase   = pomoPhase === 'work' ? 'break' : 'work';
+  pomoSeconds = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+  pomodoroRender();
+}
+
+// ── LOCAL STORAGE ─────────────────────────────────
+const STORAGE_KEY = 'quicklist-v1';
+
+function saveState() {
+  const sections = [];
+  document.querySelectorAll('.section-card').forEach(card => {
+    const sectionId = card.id;
+    const tasks = [];
+    card.querySelectorAll('.task-item').forEach(item => {
+      const cb = item.querySelector('input[type=checkbox]');
+      tasks.push({
+        id: item.id,
+        text: item.querySelector('.task-label')?.textContent || '',
+        done: item.classList.contains('done'),
+        priority: item.classList.contains('priority'),
+        focused: item.classList.contains('focused')
+      });
+    });
+    sections.push({
+      id: sectionId,
+      name: card.querySelector('.section-name')?.value || '',
+      c1: card.dataset.c1,
+      c2: card.dataset.c2,
+      barColor: card.dataset.barColor,
+      collapsed: card.classList.contains('collapsed'),
+      filter: card.dataset.filter || 'all',
+      tasks
+    });
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sectionCount, paletteIndex, sections }));
+  } catch(e) { /* storage full */ }
+}
+
+function loadState() {
+  let data;
+  try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) {}
+  if (!data || !data.sections) return false;
+
+  sectionCount  = data.sectionCount  || 0;
+  paletteIndex  = data.paletteIndex  || 0;
+  forceSplashHidden = data.sections.length > 0;
+
+  const container = document.getElementById('sections-container');
+  data.sections.forEach(sec => {
+    const card = document.createElement('div');
+    card.className = 'section-card' + (sec.collapsed ? ' collapsed' : '');
+    card.id = sec.id;
+    card.dataset.barColor = sec.barColor;
+    card.dataset.c1 = sec.c1;
+    card.dataset.c2 = sec.c2;
+    card.dataset.filter = sec.filter || 'all';
+    card.style.cssText = `background: linear-gradient(135deg, ${sec.c1} 0%, ${sec.c2} 100%); --sec-color: ${sec.barColor};`;
+
+    const filterClass = { all: 'active-all', open: 'active-open', done: 'active-done' }[sec.filter] || 'active-all';
+    const filterLabel = { all: 'All', open: 'Open', done: 'Done' }[sec.filter] || 'All';
+    const id = sec.id;
+
+    card.innerHTML = `
+      <div class="section-header">
+        <div class="section-top">
+          <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <button class="collapse-btn" onclick="toggleCollapse('${id}')" title="Collapse / expand">▾</button>
+          <input class="section-name" value="${escapeHtml(sec.name)}" spellcheck="false" title="Click to rename"
+            onkeydown="if(event.key==='Enter'&&event.shiftKey){event.preventDefault();addSection();}else if(event.key==='Enter'){event.preventDefault();document.getElementById('${id}-input').focus();}" />
+          <div class="section-actions">
+            <button class="filter-btn ${filterClass}" id="${id}-filter" onclick="cycleFilter('${id}')">${filterLabel}</button>
+            <button class="btn btn-reset" onclick="resetTasks('${id}')" title="Uncheck all">↺ reset</button>
+            <button class="btn btn-danger" onclick="clearSection('${id}')" title="Delete all tasks">✕ clear</button>
+            <button class="delete-section-btn" onclick="deleteSection('${id}')" title="Delete list">⌫</button>
+          </div>
+        </div>
+        <div class="section-progress-row">
+          <div class="section-bar-track">
+            <div class="section-bar-fill" id="${id}-bar" style="background:${sec.barColor}"></div>
+          </div>
+          <span class="section-pct" id="${id}-pct">0%</span>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="task-list" id="${id}-tasks">
+          <div class="empty-hint">No tasks yet — add one below.</div>
+        </div>
+        <div class="add-task-row">
+          <input class="add-task-input" id="${id}-input" placeholder="Add a task…"
+            onkeydown="handleTaskKey(event, '${id}')" />
+          <button class="add-task-btn" onclick="addTask('${id}')">↵</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+    _wireSection(card, id);
+
+    // Restore tasks
+    const list = card.querySelector(`#${id}-tasks`);
+    if (sec.tasks && sec.tasks.length > 0) {
+      list.innerHTML = ''; // clear empty hint
+      sec.tasks.forEach(t => {
+        const item = buildTaskEl(t.id, id, t.text);
+        if (t.done) { item.classList.add('done'); item.querySelector('input[type=checkbox]').checked = true; }
+        if (t.priority) item.classList.add('priority');
+        if (t.focused) { item.classList.add('focused'); focusTaskId = t.id; focusSectionId = id; }
+        list.appendChild(item);
+      });
+    }
+    applyFilter(id);
+    updateSection(id);
+  });
+  return true;
+}
+
+// ── INIT ─────────────────────────────────────────
+splash.style.display = 'flex';
+const loaded = loadState();
+if (!loaded) {
+  checkSplash();
+} else {
+  updateHero();
+  checkSplash();
+}
+// Also store c1/c2 on new sections from createSection
+const _origCreateSection = createSection;
+// Patch createSection to save palette colors on dataset for persistence
+(function() {
+  const orig = createSection;
+  // Already storing via _wireSection — just ensure dataset is set
+  // We'll patch the card creation inline instead
+})();
+
+
+</script>
+<!-- KEYBOARD SHORTCUT BUTTON -->
+<button id="kb-btn" onclick="document.getElementById('kb-modal-overlay').classList.add('open')">⌨ shortcuts</button>
+
+<!-- KEYBOARD SHORTCUT MODAL -->
+<div id="kb-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div id="kb-modal">
+    <h3>Keyboard Shortcuts</h3>
+
+    <div class="kb-group">
+      <div class="kb-group-title">Task Navigation</div>
+      <div class="kb-row"><span class="kb-desc">Move up / down</span><span class="kb-keys"><kbd>↑</kbd><kbd>↓</kbd></span></div>
+      <div class="kb-row"><span class="kb-desc">Complete task</span><span class="kb-keys"><kbd>T</kbd></span></div>
+      <div class="kb-row"><span class="kb-desc">Toggle priority flag</span><span class="kb-keys"><kbd>P</kbd></span></div>
+    </div>
+
+    <div class="kb-group">
+      <div class="kb-group-title">Adding Items</div>
+      <div class="kb-row"><span class="kb-desc">Add task</span><span class="kb-keys"><kbd>Enter</kbd></span></div>
+      <div class="kb-row"><span class="kb-desc">New section</span><span class="kb-keys"><kbd>Shift</kbd><kbd>Enter</kbd></span></div>
+      <div class="kb-row"><span class="kb-desc">Jump to task input</span><span class="kb-keys"><kbd>Enter</kbd> <span style="font-size:10px;color:var(--muted)">in section name</span></span></div>
+    </div>
+
+    <div class="kb-group">
+      <div class="kb-group-title">Sections</div>
+      <div class="kb-row"><span class="kb-desc">Collapse / expand</span><span class="kb-keys"><kbd>▾</kbd> <span style="font-size:10px;color:var(--muted)">click chevron</span></span></div>
+      <div class="kb-row"><span class="kb-desc">Reorder sections</span><span class="kb-keys"><kbd>⠿</kbd> <span style="font-size:10px;color:var(--muted)">drag handle</span></span></div>
+    </div>
+
+    <button id="kb-modal-close" onclick="document.getElementById('kb-modal-overlay').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+</body>
+</html>
