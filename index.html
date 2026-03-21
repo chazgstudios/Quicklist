@@ -713,7 +713,142 @@
     margin: 0 17px;
     pointer-events: none;
   }
-  #kb-btn {
+
+  /* ── TIME ESTIMATE BADGE ─────────────────────── */
+  .time-badge {
+    font-family: 'Poppins', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 99px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.5);
+    color: rgba(0,0,0,0.35);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.14s, background 0.14s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.6;
+  }
+  .task-item:hover .time-badge,
+  .task-item.kb-focus .time-badge { opacity: 1; }
+  .time-badge.has-estimate {
+    opacity: 1;
+    background: rgba(74,154,186,0.12);
+    color: #2a6e8a;
+    border-color: rgba(74,154,186,0.3);
+  }
+  .time-badge:hover { background: rgba(255,255,255,0.9) !important; color: #1a3028 !important; }
+
+  /* ── ESTIMATE POPOVER ────────────────────────── */
+  .estimate-popover {
+    position: absolute;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: fadeUp 0.15s ease;
+  }
+  .ep-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ep-input {
+    width: 52px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    outline: none;
+    color: var(--text);
+    background: var(--bg);
+  }
+  .ep-input:focus { border-color: #4a9aba; box-shadow: 0 0 0 2px rgba(74,154,186,0.18); }
+  .ep-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: none;
+    cursor: pointer;
+    transition: all 0.12s;
+    color: var(--muted);
+  }
+  .ep-ok:hover    { background: rgba(58,172,138,0.12); color: var(--green); border-color: var(--green); }
+  .ep-clear:hover { background: var(--danger-dim); color: var(--danger); border-color: var(--danger); }
+
+  /* ── FOCUS GOAL ROW ──────────────────────────── */
+  #focus-goal-row {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(25,50,42,0.4);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #focus-goal-dot {
+    width: 6px; height: 6px;
+    border-radius: 99px;
+    background: #3aac8a;
+    flex-shrink: 0;
+    display: none;
+  }
+  #focus-goal-row.has-goal { color: #2a6e8a; }
+  #focus-goal-row.has-goal #focus-goal-dot { display: block; }
+
+  /* ── FOCUS IN-OVERLAY CELEBRATION ────────────── */
+  #focus-celebration-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(160deg, #c8dff0 0%, #9fc8d8 40%, #a8d4c4 70%, #c8e4bc 100%);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 600;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    text-align: center;
+    padding: 40px;
+  }
+  #focus-celebration-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 35% 40%, rgba(255,255,255,0.4) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  #focus-celebration-overlay.open  { display: flex; }
+  #focus-celebration-overlay.visible { opacity: 1; }
+  #focus-cel-icon { font-size: 52px; position: relative; z-index: 1; }
+  #focus-cel-headline {
+    font-size: 26px; font-weight: 700; color: #1a3028;
+    position: relative; z-index: 1;
+  }
+  #focus-cel-sub {
+    font-size: 13px; color: rgba(25,50,42,0.6);
+    max-width: 280px; line-height: 1.6;
+    position: relative; z-index: 1;
+  }
+  .focus-cel-actions {
+    display: flex; gap: 10px; margin-top: 8px;
+    position: relative; z-index: 1;
+  }
     position: fixed;
     bottom: 22px;
     right: 22px;
@@ -998,6 +1133,8 @@
     z-index: 1;
   }
   #focus-session.active { display: flex; }
+  /* celebration overlay needs to escape the session box */
+  #focus-overlay { position: fixed; }
 
   #focus-task-label {
     font-size: 26px;
@@ -1148,6 +1285,10 @@
   <div id="focus-session">
     <div id="focus-task-label">Task name here</div>
     <div id="focus-task-section">List name</div>
+    <div id="focus-goal-row">
+      <span id="focus-goal-dot"></span>
+      <span id="focus-goal-text">No time estimate set</span>
+    </div>
 
     <div id="pomodoro-ring-wrap">
       <svg id="pomodoro-svg" viewBox="0 0 200 200">
@@ -1167,6 +1308,17 @@
     </div>
 
     <button id="focus-complete-btn" onclick="focusCompleteTask()">✓ Mark Complete</button>
+  </div>
+
+  <!-- In-overlay celebration (full screen, sibling to session) -->
+  <div id="focus-celebration-overlay">
+    <div id="focus-cel-icon">🎉</div>
+    <div id="focus-cel-headline">You did it!</div>
+    <div id="focus-cel-sub">Finished ahead of time.</div>
+    <div class="focus-cel-actions">
+      <button class="pomo-btn primary" onclick="focusCelebrationDone()">✓ Done</button>
+      <button class="pomo-btn" onclick="focusCelebrationKeepGoing()">Keep going →</button>
+    </div>
   </div>
 </div>
 
@@ -1379,6 +1531,7 @@ function buildTaskEl(taskId, sectionId, text) {
       </div>
     </label>
     <span class="task-label" ondblclick="editTaskLabel(this)" title="Double-click to rename">${escapeHtml(text)}</span>
+    <button class="time-badge" id="${taskId}-time" onclick="setTaskEstimate('${taskId}',event)" title="Set time estimate">⏱</button>
     <button class="focus-btn" onclick="openFocusOnTask('${sectionId}','${taskId}')" title="Focus on this task">⊙</button>
     <button class="flag-btn" onclick="togglePriority('${sectionId}','${taskId}')" title="Flag priority">🚩</button>
     <button class="task-delete" onclick="deleteTask('${sectionId}','${taskId}')" title="Remove">×</button>
@@ -1857,6 +2010,79 @@ function initDrag(card) {
   });
 }
 
+// ── TIME ESTIMATE ─────────────────────────────────
+function setTaskEstimate(taskId, e) {
+  if (e) e.stopPropagation();
+  // Remove any existing popover
+  document.querySelectorAll('.estimate-popover').forEach(p => p.remove());
+
+  const item   = document.getElementById(taskId);
+  const badge  = document.getElementById(taskId + '-time');
+  if (!item || !badge) return;
+
+  const current = item.dataset.estimate || '';
+  const popover = document.createElement('div');
+  popover.className = 'estimate-popover';
+  popover.innerHTML = `
+    <span class="ep-label">Minutes</span>
+    <input class="ep-input" type="number" min="1" max="480" value="${current}" placeholder="25" />
+    <button class="ep-btn ep-ok">✓</button>
+    <button class="ep-btn ep-clear">✕</button>
+  `;
+  document.body.appendChild(popover);
+
+  // Position below badge
+  const rect = badge.getBoundingClientRect();
+  popover.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+  popover.style.left = (rect.left + window.scrollX - 30) + 'px';
+
+  const input = popover.querySelector('.ep-input');
+  input.focus();
+  input.select();
+
+  function commit(clear) {
+    const mins = parseInt(input.value);
+    if (clear || isNaN(mins) || mins <= 0) {
+      applyEstimateBadge(item, null);
+    } else {
+      applyEstimateBadge(item, mins);
+    }
+    popover.remove();
+    saveState();
+  }
+
+  popover.querySelector('.ep-ok').onclick    = () => commit(false);
+  popover.querySelector('.ep-clear').onclick = () => commit(true);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  { e.preventDefault(); commit(false); }
+    if (e.key === 'Escape') { popover.remove(); }
+  });
+
+  // Close if clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', function outside(ev) {
+      if (!popover.contains(ev.target)) {
+        popover.remove();
+        document.removeEventListener('click', outside);
+      }
+    });
+  }, 50);
+}
+
+function applyEstimateBadge(item, mins) {
+  const badge = document.getElementById(item.id + '-time');
+  if (!badge) return;
+  if (mins && mins > 0) {
+    badge.textContent = `~${mins}m`;
+    badge.classList.add('has-estimate');
+    item.dataset.estimate = mins;
+  } else {
+    badge.textContent = '⏱';
+    badge.classList.remove('has-estimate');
+    delete item.dataset.estimate;
+  }
+}
+
 // ── FOCUS MODE ────────────────────────────────────
 let focusTaskId = null;
 let focusSectionId = null;
@@ -1944,11 +2170,25 @@ function openFocusOnTask(sectionId, taskId) {
 
   document.getElementById('focus-task-label').textContent   = label;
   document.getElementById('focus-task-section').textContent = sectionName;
+
+  // Goal row
+  const estimate = item.dataset.estimate ? parseInt(item.dataset.estimate) : null;
+  const goalRow  = document.getElementById('focus-goal-row');
+  const goalText = document.getElementById('focus-goal-text');
+  if (estimate) {
+    goalRow.classList.add('has-goal');
+    goalText.textContent = `Goal: ${estimate} min`;
+  } else {
+    goalRow.classList.remove('has-goal');
+    goalText.textContent = 'No time estimate — using 25 min';
+  }
+
   document.getElementById('focus-picker').classList.remove('active');
   document.getElementById('focus-session').classList.add('active');
 
-  // Reset pomodoro
-  pomodoroReset();
+  // Reset pomodoro with custom duration if estimate set
+  pomodoroReset(estimate ? estimate * 60 : null);
+  hideFocusCelebration();
 
   const overlay = document.getElementById('focus-overlay');
   overlay.classList.add('open');
@@ -1969,21 +2209,31 @@ function closeFocus() {
 function focusCompleteTask() {
   if (!focusTaskId) return;
   const item = document.getElementById(focusTaskId);
+  const estimate = item ? (parseInt(item.dataset.estimate) || 0) : 0;
+  const goalSecs = estimate * 60;
+  const finishedEarly = pomoRunning && goalSecs > 0 && pomoSeconds > 0;
+
+  pomodoroStop();
+
   if (item) {
     const cb = item.querySelector('input[type=checkbox]');
-    if (cb && !cb.checked) {
-      cb.checked = true;
-      cb.dispatchEvent(new Event('change'));
-    }
+    if (cb && !cb.checked) { cb.checked = true; cb.dispatchEvent(new Event('change')); }
   }
   localStorage.removeItem(FOCUS_TASK_KEY);
   focusTaskId = null;
-  closeFocus();
+
+  if (finishedEarly) {
+    showFocusCelebration();
+  } else {
+    closeFocus();
+  }
 }
 
 // ── POMODORO ──────────────────────────────────────
+let pomoGoalSeconds = POMO_WORK; // tracks the goal for this session
+
 function pomodoroRender() {
-  const total   = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+  const total   = pomoGoalSeconds;
   const elapsed = total - pomoSeconds;
   const offset  = CIRCUMFERENCE * (elapsed / total);
 
@@ -2004,9 +2254,9 @@ function pomodoroToggle() {
       pomoSeconds--;
       if (pomoSeconds <= 0) {
         pomodoroStop();
-        // Auto-switch phase
         pomoPhase   = pomoPhase === 'work' ? 'break' : 'work';
-        pomoSeconds = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+        pomoGoalSeconds = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+        pomoSeconds = pomoGoalSeconds;
       }
       pomodoroRender();
     }, 1000);
@@ -2021,10 +2271,11 @@ function pomodoroStop() {
   pomodoroRender();
 }
 
-function pomodoroReset() {
+function pomodoroReset(durationSecs = null) {
   pomodoroStop();
-  pomoPhase   = 'work';
-  pomoSeconds = POMO_WORK;
+  pomoPhase = 'work';
+  pomoGoalSeconds = durationSecs || POMO_WORK;
+  pomoSeconds     = pomoGoalSeconds;
   const prog = document.getElementById('pomodoro-progress');
   if (prog) prog.style.strokeDashoffset = 0;
   pomodoroRender();
@@ -2032,9 +2283,67 @@ function pomodoroReset() {
 
 function pomodoroSkip() {
   pomodoroStop();
-  pomoPhase   = pomoPhase === 'work' ? 'break' : 'work';
-  pomoSeconds = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+  pomoPhase = pomoPhase === 'work' ? 'break' : 'work';
+  pomoGoalSeconds = pomoPhase === 'work' ? POMO_WORK : POMO_BREAK;
+  pomoSeconds     = pomoGoalSeconds;
   pomodoroRender();
+}
+
+// ── FOCUS CELEBRATION ─────────────────────────────
+async function showFocusCelebration() {
+  const cel = document.getElementById('focus-celebration-overlay');
+  document.getElementById('focus-cel-icon').textContent = '✦';
+  document.getElementById('focus-cel-headline').textContent = 'Loading…';
+  document.getElementById('focus-cel-sub').textContent = '';
+  cel.classList.add('open');
+  requestAnimationFrame(() => requestAnimationFrame(() => cel.classList.add('visible')));
+
+  const EARLY_PHRASES = [
+    { icon: '⚡', headline: 'Ahead of schedule!', sub: 'You beat the clock. That\'s the good stuff.' },
+    { icon: '🎯', headline: 'Nailed it early.', sub: 'Done with time to spare. Impressive.' },
+    { icon: '🌟', headline: 'Under budget!', sub: 'Finished before the timer. Well done.' },
+    { icon: '🚀', headline: 'Faster than planned.', sub: 'You\'re on a roll. Keep the momentum.' },
+    { icon: '✨', headline: 'Time to spare.', sub: 'You beat your own estimate. Nice work.' },
+  ];
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 100,
+        system: 'Generate a short celebration message for finishing a task ahead of schedule. Respond ONLY with JSON: {"icon":"<emoji>","headline":"<4-6 words>","sub":"<one sentence, max 10 words>"}. Be upbeat, brief, and genuine.',
+        messages: [{ role: 'user', content: 'Generate.' }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text?.trim();
+    const phrase = JSON.parse(text);
+    document.getElementById('focus-cel-icon').textContent     = phrase.icon;
+    document.getElementById('focus-cel-headline').textContent = phrase.headline;
+    document.getElementById('focus-cel-sub').textContent      = phrase.sub;
+  } catch {
+    const p = EARLY_PHRASES[Math.floor(Math.random() * EARLY_PHRASES.length)];
+    document.getElementById('focus-cel-icon').textContent     = p.icon;
+    document.getElementById('focus-cel-headline').textContent = p.headline;
+    document.getElementById('focus-cel-sub').textContent      = p.sub;
+  }
+}
+
+function hideFocusCelebration() {
+  const cel = document.getElementById('focus-celebration-overlay');
+  cel.classList.remove('visible');
+  setTimeout(() => cel.classList.remove('open'), 350);
+}
+
+function focusCelebrationDone() {
+  hideFocusCelebration();
+  setTimeout(() => closeFocus(), 360);
+}
+
+function focusCelebrationKeepGoing() {
+  hideFocusCelebration();
 }
 
 // ── LOCAL STORAGE ─────────────────────────────────
@@ -2052,7 +2361,8 @@ function saveState() {
         text: item.querySelector('.task-label')?.textContent || '',
         done: item.classList.contains('done'),
         priority: item.classList.contains('priority'),
-        focused: item.classList.contains('focused')
+        focused: item.classList.contains('focused'),
+        estimate: item.dataset.estimate ? parseInt(item.dataset.estimate) : null
       });
     });
     sections.push({
@@ -2139,6 +2449,7 @@ function loadState() {
         if (t.done) { item.classList.add('done'); item.querySelector('input[type=checkbox]').checked = true; }
         if (t.priority) item.classList.add('priority');
         if (t.focused) { item.classList.add('focused'); focusTaskId = t.id; focusSectionId = id; }
+        if (t.estimate) applyEstimateBadge(item, t.estimate);
         list.appendChild(item);
       });
     }
